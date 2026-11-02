@@ -20,3 +20,4 @@
 - npm install dotenv
 - node index.js
 - npm install cors
+- npm install --save-dev supertest jest
