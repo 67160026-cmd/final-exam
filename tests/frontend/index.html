@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      ระบบสั่งอาหารและจัดการร้านค้าออนไลน์ (Food Ordering & Admin Hub)
+    </title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Google Font (Kanit) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body
+    class="bg-slate-50 min-h-screen text-slate-800 font-['Kanit'] antialiased flex flex-col"
+  >
+    <!-- Top Navigation Bar -->
+    <header
+      class="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white shadow-lg sticky top-0 z-50"
+    >
+      <div
+        class="container mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3"
+      >
+        <div class="flex items-center space-x-3">
+          <div
+            class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md shadow-inner"
+          >
+            <i class="fa-solid fa-utensils text-xl text-amber-200"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold leading-none tracking-wide">
+              ระบบสั่งอาหารออนไลน์
+            </h1>
+            <span class="text-xs text-amber-100 font-light opacity-90"
+              >Food Order & Admin Dashboard System</span
+            >
+          </div>
+        </div>
+
+        <!-- Header Status -->
+        <div class="flex items-center gap-3">
+          <div
+            class="hidden sm:flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-lg border border-white/10 text-xs"
+          >
+            <span
+              class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
+            ></span>
+            <span
+              >Backend Port: <strong class="text-amber-200">3000</strong></span
+            >
+          </div>
+          <div
+            id="api-status-badge"
+            class="flex items-center gap-2 bg-amber-800/80 px-3 py-1.5 rounded-lg text-xs font-medium border border-amber-500/30"
+          >
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <span>กำลังตรวจสอบเชื่อมต่อ...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Navigation Bar -->
+      <div class="bg-black/10 border-t border-white/10">
+        <div class="container mx-auto px-4 flex space-x-1 overflow-x-auto">
+          <button
+            onclick="switchTab('order-tab')"
+            id="nav-order-tab"
+            class="tab-btn active-tab flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition whitespace-nowrap"
+          >
+            <i class="fa-solid fa-burger"></i> หน้าร้าน / สั่งอาหาร
+          </button>
+          <button
+            onclick="switchTab('history-tab')"
+            id="nav-history-tab"
+            class="tab-btn flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 border-transparent hover:text-amber-200 transition whitespace-nowrap"
+          >
+            <i class="fa-solid fa-clock-rotate-left"></i> ประวัติคำสั่งซื้อ
+          </button>
+          <button
+            onclick="switchTab('add-menu-tab')"
+            id="nav-add-menu-tab"
+            class="tab-btn flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 border-transparent hover:text-amber-200 transition whitespace-nowrap"
+          >
+            <i class="fa-solid fa-square-plus"></i> จัดการ/เพิ่มเมนูอาหาร
+          </button>
+          <button
+            onclick="switchTab('manage-tab')"
+            id="nav-manage-tab"
+            class="tab-btn flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 border-transparent hover:text-amber-200 transition whitespace-nowrap"
+          >
+            <i class="fa-solid fa-list-check"></i> จัดการสถานะคำสั่งซื้อ
+          </button>
+          <button
+            onclick="switchTab('report-tab')"
+            id="nav-report-tab"
+            class="tab-btn flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 border-transparent hover:text-amber-200 transition whitespace-nowrap"
+          >
+            <i class="fa-solid fa-chart-line"></i> รายงานยอดขาย
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="container mx-auto px-4 py-6 flex-1">
+      <!-- Toast Container -->
+      <div
+        id="toast-container"
+        class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"
+      ></div>
+
+      <!-- TAB 1: ORDERING FRONTEND -->
+      <div id="order-tab" class="tab-content">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div
+            class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4"
+          >
+            <div
+              class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl"
+            >
+              <i class="fa-solid fa-bowl-food"></i>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-medium">
+                รายการอาหารทั้งหมด
+              </p>
+              <h3
+                id="stat-total-items"
+                class="text-xl font-bold text-slate-800"
+              >
+                0
+              </h3>
+            </div>
+          </div>
+
+          <div
+            class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4"
+          >
+            <div
+              class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"
+            >
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-medium">พร้อมจำหน่าย</p>
+              <h3
+                id="stat-available-items"
+                class="text-xl font-bold text-slate-800"
+              >
+                0
+              </h3>
+            </div>
+          </div>
+
+          <div
+            class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4"
+          >
+            <div
+              class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl"
+            >
+              <i class="fa-solid fa-cart-shopping"></i>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-medium">สินค้าในตะกร้า</p>
+              <h3 id="stat-cart-count" class="text-xl font-bold text-slate-800">
+                0 รายการ
+              </h3>
+            </div>
+          </div>
+
+          <div
+            class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4"
+          >
+            <div
+              class="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center text-xl"
+            >
+              <i class="fa-solid fa-receipt"></i>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-medium">ราคารวมตะกร้า</p>
+              <h3
+                id="stat-cart-total"
+                class="text-xl font-bold text-orange-600"
+              >
+                0.00 ฿
+              </h3>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Menu Selection -->
+          <div class="lg:col-span-2 space-y-5">
+            <div
+              class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-4"
+            >
+              <div
+                class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
+              >
+                <h2
+                  class="text-lg font-bold text-slate-700 flex items-center gap-2"
+                >
+                  <i class="fa-solid fa-store text-amber-500"></i>
+                  เลือกสั่งรายการอาหาร
+                </h2>
+                <div class="relative w-full sm:w-64">
+                  <i
+                    class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+                  ></i>
+                  <input
+                    type="text"
+                    id="search-input"
+                    onkeyup="debounceLoadMenu()"
+                    placeholder="ค้นหาชื่ออาหาร..."
+                    class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition"
+                  />
+                </div>
+              </div>
+
+              <!-- Filters -->
+              <div
+                class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100 text-xs"
+              >
+                <div>
+                  <label class="text-slate-500 mb-1 block"
+                    >ราคาต่ำสุด (บาท)</label
+                  >
+                  <input
+                    type="number"
+                    id="min-price"
+                    placeholder="เช่น 0"
+                    onchange="loadMenu()"
+                    class="w-full px-3 py-1.5 border border-slate-200 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label class="text-slate-500 mb-1 block"
+                    >ราคาสูงสุด (บาท)</label
+                  >
+                  <input
+                    type="number"
+                    id="max-price"
+                    placeholder="เช่น 100"
+                    onchange="loadMenu()"
+                    class="w-full px-3 py-1.5 border border-slate-200 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label class="text-slate-500 mb-1 block">สถานะสินค้า</label>
+                  <select
+                    id="available-filter"
+                    onchange="loadMenu()"
+                    class="w-full px-3 py-1.5 border border-slate-200 rounded-lg bg-white"
+                  >
+                    <option value="">ทั้งหมด</option>
+                    <option value="true" selected>เฉพาะพร้อมขาย</option>
+                    <option value="false">สินค้าหมด</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div
+                class="col-span-2 text-center py-12 bg-white rounded-2xl shadow-sm border border-slate-100"
+              >
+                <i
+                  class="fa-solid fa-spinner fa-spin text-3xl text-amber-500 mb-3"
+                ></i>
+                <p class="text-slate-400 text-sm">
+                  กำลังโหลดข้อมูลรายการอาหาร...
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cart Panel -->
+          <div class="space-y-5">
+            <div
+              class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 sticky top-24"
+            >
+              <div
+                class="flex justify-between items-center pb-4 border-b border-slate-100"
+              >
+                <h2
+                  class="text-lg font-bold text-slate-800 flex items-center gap-2"
+                >
+                  <i class="fa-solid fa-basket-shopping text-orange-500"></i>
+                  ตระกร้าคำสั่งซื้อ
+                </h2>
+                <button
+                  onclick="clearCart()"
+                  class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 transition"
+                >
+                  <i class="fa-solid fa-trash-can"></i> ล้างตะกร้า
+                </button>
+              </div>
+
+              <div
+                id="cart-items"
+                class="py-4 space-y-3 max-h-[320px] overflow-y-auto divide-y divide-slate-50"
+              >
+                <div class="text-center py-8">
+                  <i
+                    class="fa-solid fa-cart-flatbed text-4xl text-slate-200 mb-2"
+                  ></i>
+                  <p class="text-slate-400 text-xs">
+                    ยังไม่มีรายการอาหารในตะกร้า
+                  </p>
+                </div>
+              </div>
+
+              <div class="border-t border-slate-100 pt-4 space-y-2">
+                <div class="flex justify-between text-xs text-slate-500">
+                  <span>จำนวนรายการรวม</span>
+                  <span id="cart-total-qty">0 ชิ้น</span>
+                </div>
+                <div
+                  class="flex justify-between items-center text-lg font-bold pt-1"
+                >
+                  <span class="text-slate-700">ยอดรวมสุทธิ</span>
+                  <span id="cart-total-price" class="text-orange-600"
+                    >0.00 ฿</span
+                  >
+                </div>
+              </div>
+
+              <form
+                id="order-form"
+                onsubmit="submitOrder(event)"
+                class="mt-5 space-y-3 pt-4 border-t border-slate-100"
+              >
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1"
+                    >ชื่อลูกค้า / เลขโต๊ะ
+                    <span class="text-red-500">*</span></label
+                  >
+                  <div class="relative">
+                    <i
+                      class="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
+                    ></i>
+                    <input
+                      type="text"
+                      id="customer-name"
+                      required
+                      placeholder="ระบุชื่อผู้สั่งซื้อ..."
+                      class="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  id="btn-submit"
+                  disabled
+                  class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3 rounded-xl shadow-md transition transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 text-sm"
+                >
+                  <i class="fa-solid fa-paper-plane"></i> ยืนยันคำสั่งซื้อ
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: ORDER HISTORY -->
+      <div id="history-tab" class="tab-content hidden space-y-5">
+        <div
+          class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap justify-between items-center gap-3"
+        >
+          <div>
+            <h2
+              class="text-lg font-bold text-slate-800 flex items-center gap-2"
+            >
+              <i class="fa-solid fa-clock-rotate-left text-amber-500"></i>
+              ประวัติคำสั่งซื้อทั้งหมด (Order History)
+            </h2>
+            <p class="text-xs text-slate-400">
+              ดึงข้อมูลคำสั่งซื้อย้อนหลังจาก API: GET /api/orders
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select
+              id="history-status-filter"
+              onchange="loadOrderHistory()"
+              class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white"
+            >
+              <option value="">ทุกสถานะ</option>
+              <option value="pending">⏳ pending</option>
+              <option value="preparing">🍳 preparing</option>
+              <option value="delivered">✅ delivered</option>
+              <option value="cancelled">❌ cancelled</option>
+            </select>
+            <button
+              onclick="loadOrderHistory()"
+              class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-3.5 py-1.5 rounded-xl font-medium transition flex items-center gap-1.5"
+            >
+              <i class="fa-solid fa-rotate"></i> โหลดข้อมูลใหม่
+            </button>
+          </div>
+        </div>
+
+        <!-- History List Container -->
+        <div id="history-list" class="space-y-4">
+          <div
+            class="text-center py-12 bg-white rounded-2xl shadow-sm border border-slate-100"
+          >
+            <i
+              class="fa-solid fa-spinner fa-spin text-3xl text-amber-500 mb-3"
+            ></i>
+            <p class="text-slate-400 text-sm">กำลังดึงประวัติคำสั่งซื้อ...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: ADD & MANAGE MENU (หน้าจัดการ/เพิ่มเมนูอาหาร) -->
+      <div id="add-menu-tab" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Left: Form Add New Menu -->
+          <div class="space-y-5">
+            <div
+              class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 sticky top-24"
+            >
+              <h2
+                class="text-lg font-bold text-slate-800 flex items-center gap-2 pb-4 border-b border-slate-100"
+              >
+                <i class="fa-solid fa-circle-plus text-emerald-500"></i>
+                เพิ่มเมนูอาหารใหม่ (POST /api/foods)
+              </h2>
+
+              <form
+                id="add-menu-form"
+                onsubmit="submitNewMenu(event)"
+                class="mt-4 space-y-4"
+              >
+                <div>
+                  <label
+                    class="block text-xs font-semibold text-slate-600 mb-1"
+                  >
+                    ชื่อรายการอาหาร <span class="text-red-500">*</span>
+                  </label>
+                  <div class="relative">
+                    <i
+                      class="fa-solid fa-utensils absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
+                    ></i>
+                    <input
+                      type="text"
+                      id="new-menu-name"
+                      required
+                      placeholder="เช่น ข้าวผัดปู, ชาไทยเย็น"
+                      class="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    class="block text-xs font-semibold text-slate-600 mb-1"
+                  >
+                    ราคา (บาท) <span class="text-red-500">*</span>
+                  </label>
+                  <div class="relative">
+                    <i
+                      class="fa-solid fa-baht-sign absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
+                    ></i>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      id="new-menu-price"
+                      required
+                      placeholder="เช่น 60.00"
+                      class="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1"
+                    >สถานะสินค้าแรกเริ่มต้น</label
+                  >
+                  <select
+                    id="new-menu-available"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white font-medium focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="true">✅ พร้อมขาย (Available)</option>
+                    <option value="false">❌ สินค้าหมด (Out of Stock)</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  id="btn-add-menu"
+                  class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-2.5 rounded-xl shadow-md transition transform active:scale-95 flex items-center justify-center gap-2 text-sm"
+                >
+                  <i class="fa-solid fa-plus-circle"></i> บันทึกเมนูอาหาร
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Right: Admin Menu Table / List -->
+          <div class="lg:col-span-2 space-y-5">
+            <div
+              class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center"
+            >
+              <div>
+                <h2
+                  class="text-lg font-bold text-slate-800 flex items-center gap-2"
+                >
+                  <i class="fa-solid fa-list text-amber-500"></i>
+                  รายการเมนูทั้งหมดในระบบ
+                </h2>
+                <p class="text-xs text-slate-400">
+                  สามารถเปลี่ยนสถานะพร้อมขาย หรือลบเมนูได้ทันที
+                </p>
+              </div>
+              <button
+                onclick="loadAdminMenuList()"
+                class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-medium transition flex items-center gap-1.5"
+              >
+                <i class="fa-solid fa-rotate"></i> รีเฟรชรายการ
+              </button>
+            </div>
+
+            <div
+              class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+            >
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr
+                      class="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                    >
+                      <th class="p-4">รหัสเมนู</th>
+                      <th class="p-4">ชื่อรายการอาหาร</th>
+                      <th class="p-4">ราคา</th>
+                      <th class="p-4 text-center">สถานะ</th>
+                      <th class="p-4 text-center">จัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="admin-menu-table-body"
+                    class="divide-y divide-slate-100 text-sm"
+                  >
+                    <tr>
+                      <td colspan="5" class="text-center py-8 text-slate-400">
+                        กำลังโหลดข้อมูลเมนู...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: ORDER STATUS MANAGEMENT -->
+      <div id="manage-tab" class="tab-content hidden space-y-5">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-amber-500"></i>
+            อัปเดตสถานะออเดอร์ (PUT /api/orders/:id/status)
+          </h2>
+          <p class="text-xs text-slate-400">
+            เปลี่ยนสถานะออเดอร์ เช่น pending -> preparing -> delivered
+          </p>
+        </div>
+
+        <div
+          class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-lg"
+        >
+          <form onsubmit="updateOrderStatus(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1"
+                >หมายเลขคำสั่งซื้อ (Order ID)</label
+              >
+              <input
+                type="number"
+                id="update-order-id"
+                required
+                placeholder="ระบุ Order ID เช่น 1"
+                min="1"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1"
+                >เลือกสถานะใหม่</label
+              >
+              <select
+                id="update-status-val"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white font-medium"
+              >
+                <option value="pending">⏳ pending (รอดำเนินการ)</option>
+                <option value="preparing">🍳 preparing (กำลังปรุง)</option>
+                <option value="delivered">✅ delivered (จัดส่งแล้ว)</option>
+                <option value="cancelled">❌ cancelled (ยกเลิก)</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              class="w-full bg-amber-600 text-white font-bold py-2.5 rounded-xl hover:bg-amber-700 transition text-sm flex items-center justify-center gap-2"
+            >
+              <i class="fa-solid fa-rotate"></i> อัปเดตสถานะ
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB 5: SALES REPORT -->
+      <div id="report-tab" class="tab-content hidden space-y-5">
+        <div
+          class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap justify-between items-center gap-3"
+        >
+          <div>
+            <h2
+              class="text-lg font-bold text-slate-800 flex items-center gap-2"
+            >
+              <i class="fa-solid fa-chart-pie text-blue-500"></i>
+              รายงานสรุปยอดขายตามรายการอาหาร (Sales Analytics)
+            </h2>
+          </div>
+          <button
+            onclick="loadReport()"
+            class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-xl font-medium transition flex items-center gap-2"
+          >
+            <i class="fa-solid fa-rotate-right"></i> รีเฟรชรายงาน
+          </button>
+        </div>
+        <div
+          class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+        >
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr
+                  class="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                >
+                  <th class="p-4">รหัสสินค้า</th>
+                  <th class="p-4">ชื่อรายการอาหาร</th>
+                  <th class="p-4">ราคาต่อหน่วย</th>
+                  <th class="p-4 text-center">จำนวนที่ขายได้ (ชิ้น)</th>
+                  <th class="p-4 text-right">ยอดขายรวมสุทธิ (บาท)</th>
+                </tr>
+              </thead>
+              <tbody
+                id="report-table-body"
+                class="divide-y divide-slate-100 text-sm"
+              >
+                <tr>
+                  <td colspan="5" class="text-center py-8 text-slate-400">
+                    กดปุ่มเพื่อเริ่มโหลดข้อมูลรายงานยอดขาย
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="bg-white border-t border-slate-200 mt-auto py-4 text-center text-xs text-slate-400"
+    >
+      <p>Food Ordering System &bull; Express + MySQL Backend Connected</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

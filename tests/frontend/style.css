@@ -1,0 +1,24 @@
+body {
+  font-family: "Kanit", sans-serif;
+}
+
+.tab-btn.active-tab {
+  color: #fef3c7;
+  border-color: #f59e0b;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
